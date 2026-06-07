@@ -1,26 +1,50 @@
 import { test, expect } from "@playwright/test";
+import * as fs from "fs";
+import * as path from "path";
 import { LoginPage } from "./pages/LoginPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { CartPage } from "./pages/CartPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
 
-test("checkout flow succesvol afronden", async ({ page }) => {
-  const loginPage = new LoginPage(page);
-  await loginPage.goto();
-  await loginPage.login("standard_user", "secret_sauce");
+const TOOL = "playwright";
+const SCENARIO = "checkout-flow";
+const RESULTS_FILE = path.join(__dirname, "..", "results", "timings.csv");
 
-  const productsPage = new ProductsPage(page);
-  await productsPage.addProductToCart("sauce-labs-backpack");
-  await productsPage.openCart();
+function logTiming(run: number, durationMs: number): void {
+  fs.mkdirSync(path.dirname(RESULTS_FILE), { recursive: true });
+  if (!fs.existsSync(RESULTS_FILE)) {
+    fs.writeFileSync(RESULTS_FILE, "tool,scenario,run,duration_ms\n");
+  }
+  fs.appendFileSync(RESULTS_FILE, `${TOOL},${SCENARIO},${run},${durationMs}\n`);
+}
 
-  const cartPage = new CartPage(page);
-  await cartPage.checkout();
+for (let runNumber = 1; runNumber <= 11; runNumber++) {
+  test(`run ${runNumber} - checkout flow succesvol afronden`, async ({
+    page,
+  }) => {
+    const startTime = Date.now();
 
-  const checkoutPage = new CheckoutPage(page);
-  await checkoutPage.fillInformation("Bryan", "Fouda", "9000");
-  await checkoutPage.finish();
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login("standard_user", "secret_sauce");
 
-  await expect(checkoutPage.completeHeader).toHaveText(
-    "Thank you for your order!",
-  );
-});
+    const productsPage = new ProductsPage(page);
+    await productsPage.addProductToCart("sauce-labs-backpack");
+    await productsPage.openCart();
+
+    const cartPage = new CartPage(page);
+    await cartPage.checkout();
+
+    const checkoutPage = new CheckoutPage(page);
+    await checkoutPage.fillInformation("Bryan", "Fouda", "9000");
+    await checkoutPage.finish();
+
+    await expect(checkoutPage.completeHeader).toHaveText(
+      "Thank you for your order!",
+    );
+
+    const duration = Date.now() - startTime;
+    console.log(`Run ${runNumber}: ${duration} ms`);
+    logTiming(runNumber, duration);
+  });
+}

@@ -1,14 +1,38 @@
 import { test, expect } from "@playwright/test";
+import * as fs from "fs";
+import * as path from "path";
 import { LoginPage } from "./pages/LoginPage";
 import { ProductsPage } from "./pages/ProductsPage";
 
-test("product toevoegen aan winkelmand", async ({ page }) => {
-  const loginPage = new LoginPage(page);
-  await loginPage.goto();
-  await loginPage.login("standard_user", "secret_sauce");
+const TOOL = "playwright";
+const SCENARIO = "add-product-to-cart";
+const RESULTS_FILE = path.join(__dirname, "..", "results", "timings.csv");
 
-  const productsPage = new ProductsPage(page);
-  await productsPage.addProductToCart("sauce-labs-backpack");
+function logTiming(run: number, durationMs: number): void {
+  fs.mkdirSync(path.dirname(RESULTS_FILE), { recursive: true });
+  if (!fs.existsSync(RESULTS_FILE)) {
+    fs.writeFileSync(RESULTS_FILE, "tool,scenario,run,duration_ms\n");
+  }
+  fs.appendFileSync(RESULTS_FILE, `${TOOL},${SCENARIO},${run},${durationMs}\n`);
+}
 
-  await expect(productsPage.cartBadge).toHaveText("1");
-});
+for (let runNumber = 1; runNumber <= 11; runNumber++) {
+  test(`run ${runNumber} - product toevoegen aan winkelmand`, async ({
+    page,
+  }) => {
+    const startTime = Date.now();
+
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login("standard_user", "secret_sauce");
+
+    const productsPage = new ProductsPage(page);
+    await productsPage.addProductToCart("sauce-labs-backpack");
+
+    await expect(productsPage.cartBadge).toHaveText("1");
+
+    const duration = Date.now() - startTime;
+    console.log(`Run ${runNumber}: ${duration} ms`);
+    logTiming(runNumber, duration);
+  });
+}
