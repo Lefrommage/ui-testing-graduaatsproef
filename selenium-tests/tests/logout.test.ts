@@ -1,6 +1,7 @@
-import { Builder, By, until, WebDriver } from "selenium-webdriver";
+import { Builder, WebDriver } from "selenium-webdriver";
 import "chromedriver";
-import { login } from "./helpers/loginHelper";
+import { LoginPage } from "./pages/LoginPage";
+import { ProductsPage } from "./pages/ProductsPage";
 
 jest.setTimeout(30000);
 
@@ -9,7 +10,6 @@ describe("Selenium - logout", () => {
 
   beforeEach(async () => {
     driver = await new Builder().forBrowser("chrome").build();
-    await driver.get("https://www.saucedemo.com/");
   });
 
   afterEach(async () => {
@@ -17,24 +17,13 @@ describe("Selenium - logout", () => {
   });
 
   test("brengt gebruiker terug naar loginpagina na logout", async () => {
-    await login(driver);
+    const loginPage = new LoginPage(driver);
+    await loginPage.open();
+    await loginPage.login("standard_user", "secret_sauce");
 
-    await driver.findElement(By.css("#react-burger-menu-btn")).click();
+    const productsPage = new ProductsPage(driver);
+    await productsPage.logout();
 
-    const logoutButton = await driver.wait(
-      until.elementLocated(By.css('[data-test="logout-sidebar-link"]')),
-      5000,
-    );
-
-    await logoutButton.click();
-
-    const loginButton = await driver.wait(
-      until.elementLocated(By.css('[data-test="login-button"]')),
-      5000,
-    );
-
-    const isLoginButtonVisible = await loginButton.isDisplayed();
-
-    expect(isLoginButtonVisible).toBe(true);
+    expect(await loginPage.isLoginButtonVisible()).toBe(true);
   });
 });

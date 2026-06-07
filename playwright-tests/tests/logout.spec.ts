@@ -1,13 +1,14 @@
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers/loginHelper";
+import { LoginPage } from "./pages/LoginPage";
+import { ProductsPage } from "./pages/ProductsPage";
 
-// logout
 test("logout brengt gebruiker terug naar loginpagina", async ({ page }) => {
-  await page.goto("https://www.saucedemo.com/");
-  await login(page);
+  const loginPage = new LoginPage(page);
+  await loginPage.goto();
+  await loginPage.login("standard_user", "secret_sauce");
 
-  await page.locator("#react-burger-menu-btn").click();
-  await page.locator('[data-test="logout-sidebar-link"]').click();
+  const productsPage = new ProductsPage(page);
+  await productsPage.logout();
 
-  await expect(page.locator('[data-test="login-button"]')).toBeVisible();
+  await expect(loginPage.loginButton).toBeVisible();
 });

@@ -1,6 +1,9 @@
-import { Builder, By, WebDriver } from "selenium-webdriver";
+import { Builder, WebDriver } from "selenium-webdriver";
 import "chromedriver";
-import { login } from "./helpers/loginHelper";
+import { LoginPage } from "./pages/LoginPage";
+import { ProductsPage } from "./pages/ProductsPage";
+import { CartPage } from "./pages/CartPage";
+import { CheckoutPage } from "./pages/CheckoutPage";
 
 jest.setTimeout(30000);
 
@@ -9,7 +12,6 @@ describe("Selenium - checkout flow", () => {
 
   beforeEach(async () => {
     driver = await new Builder().forBrowser("chrome").build();
-    await driver.get("https://www.saucedemo.com/");
   });
 
   afterEach(async () => {
@@ -17,31 +19,23 @@ describe("Selenium - checkout flow", () => {
   });
 
   test("rondt de checkout succesvol af", async () => {
-    await login(driver);
+    const loginPage = new LoginPage(driver);
+    await loginPage.open();
+    await loginPage.login("standard_user", "secret_sauce");
 
-    await driver
-      .findElement(By.css('[data-test="add-to-cart-sauce-labs-backpack"]'))
-      .click();
-    await driver.findElement(By.css(".shopping_cart_link")).click();
+    const productsPage = new ProductsPage(driver);
+    await productsPage.addProductToCart("sauce-labs-backpack");
+    await productsPage.openCart();
 
-    await driver.findElement(By.css('[data-test="checkout"]')).click();
-    await driver
-      .findElement(By.css('[data-test="firstName"]'))
-      .sendKeys("Bryan");
-    await driver
-      .findElement(By.css('[data-test="lastName"]'))
-      .sendKeys("Fouda");
-    await driver
-      .findElement(By.css('[data-test="postalCode"]'))
-      .sendKeys("9000");
-    await driver.findElement(By.css('[data-test="continue"]')).click();
+    const cartPage = new CartPage(driver);
+    await cartPage.checkout();
 
-    await driver.findElement(By.css('[data-test="finish"]')).click();
+    const checkoutPage = new CheckoutPage(driver);
+    await checkoutPage.fillInformation("Bryan", "Fouda", "9000");
+    await checkoutPage.finish();
 
-    const completeHeaderText = await driver
-      .findElement(By.css(".complete-header"))
-      .getText();
-
-    expect(completeHeaderText).toBe("Thank you for your order!");
+    expect(await checkoutPage.getConfirmationMessage()).toBe(
+      "Thank you for your order!",
+    );
   });
 });

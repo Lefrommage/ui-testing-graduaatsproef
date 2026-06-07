@@ -14,7 +14,6 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/mocha": "^10.0.10",
     "@types/selenium-webdriver": "^4.35.6",
     "chromedriver": "^149.0.1",
     "jest": "^30.4.2",

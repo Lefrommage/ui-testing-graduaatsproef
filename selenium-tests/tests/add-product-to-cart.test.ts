@@ -1,6 +1,7 @@
-import { Builder, By, WebDriver } from "selenium-webdriver";
+import { Builder, WebDriver } from "selenium-webdriver";
 import "chromedriver";
-import { login } from "./helpers/loginHelper";
+import { LoginPage } from "./pages/LoginPage";
+import { ProductsPage } from "./pages/ProductsPage";
 
 jest.setTimeout(30000);
 
@@ -9,7 +10,6 @@ describe("Selenium - product toevoegen aan winkelmand", () => {
 
   beforeEach(async () => {
     driver = await new Builder().forBrowser("chrome").build();
-    await driver.get("https://www.saucedemo.com/");
   });
 
   afterEach(async () => {
@@ -17,16 +17,13 @@ describe("Selenium - product toevoegen aan winkelmand", () => {
   });
 
   test("voegt een product toe aan de winkelmand", async () => {
-    await login(driver);
+    const loginPage = new LoginPage(driver);
+    await loginPage.open();
+    await loginPage.login("standard_user", "secret_sauce");
 
-    await driver
-      .findElement(By.css('[data-test="add-to-cart-sauce-labs-backpack"]'))
-      .click();
+    const productsPage = new ProductsPage(driver);
+    await productsPage.addProductToCart("sauce-labs-backpack");
 
-    const cartBadgeText = await driver
-      .findElement(By.css(".shopping_cart_badge"))
-      .getText();
-
-    expect(cartBadgeText).toBe("1");
+    expect(await productsPage.getCartCount()).toBe("1");
   });
 });

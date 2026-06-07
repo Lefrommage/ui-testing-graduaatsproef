@@ -1,12 +1,14 @@
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers/loginHelper";
+import { LoginPage } from "./pages/LoginPage";
+import { ProductsPage } from "./pages/ProductsPage";
 
-// add product to cart
 test("product toevoegen aan winkelmand", async ({ page }) => {
-  await page.goto("https://www.saucedemo.com/");
-  await login(page);
+  const loginPage = new LoginPage(page);
+  await loginPage.goto();
+  await loginPage.login("standard_user", "secret_sauce");
 
-  await page.locator('[data-test="add-to-cart-sauce-labs-backpack"]').click();
+  const productsPage = new ProductsPage(page);
+  await productsPage.addProductToCart("sauce-labs-backpack");
 
-  await expect(page.locator(".shopping_cart_badge")).toHaveText("1");
+  await expect(productsPage.cartBadge).toHaveText("1");
 });

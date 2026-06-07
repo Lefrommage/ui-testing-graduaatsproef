@@ -1,22 +1,26 @@
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers/loginHelper";
+import { LoginPage } from "./pages/LoginPage";
+import { ProductsPage } from "./pages/ProductsPage";
+import { CartPage } from "./pages/CartPage";
+import { CheckoutPage } from "./pages/CheckoutPage";
 
 test("checkout flow succesvol afronden", async ({ page }) => {
-  await page.goto("https://www.saucedemo.com/");
-  await login(page);
+  const loginPage = new LoginPage(page);
+  await loginPage.goto();
+  await loginPage.login("standard_user", "secret_sauce");
 
-  await page.locator('[data-test="add-to-cart-sauce-labs-backpack"]').click();
-  await page.locator(".shopping_cart_link").click();
+  const productsPage = new ProductsPage(page);
+  await productsPage.addProductToCart("sauce-labs-backpack");
+  await productsPage.openCart();
 
-  await page.locator('[data-test="checkout"]').click();
-  await page.locator('[data-test="firstName"]').fill("Bryan");
-  await page.locator('[data-test="lastName"]').fill("Fouda");
-  await page.locator('[data-test="postalCode"]').fill("9000");
-  await page.locator('[data-test="continue"]').click();
+  const cartPage = new CartPage(page);
+  await cartPage.checkout();
 
-  await page.locator('[data-test="finish"]').click();
+  const checkoutPage = new CheckoutPage(page);
+  await checkoutPage.fillInformation("Bryan", "Fouda", "9000");
+  await checkoutPage.finish();
 
-  await expect(page.locator(".complete-header")).toHaveText(
+  await expect(checkoutPage.completeHeader).toHaveText(
     "Thank you for your order!",
   );
 });
