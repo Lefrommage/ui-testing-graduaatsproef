@@ -4,4 +4,3 @@ Proof of concept voor de graduaatsproef *"Van Selenium naar Playwright: een prak
 
 De tests draaien tegen de demo-webapplicatie [SauceDemo](https://www.saucedemo.com/), die een realistische flow biedt: login, productoverzicht, winkelmand en checkout.
 
-## Projectstructuur
